@@ -26,11 +26,6 @@ class Registry
      */
     private $timers;
 
-    /**
-     * @var array
-     */
-    private $videoStream;
-
     public static function getInstance()
     {
         if (self::$instance === null) {
@@ -65,28 +60,5 @@ class Registry
     public function getTimers(): array
     {
         return $this->timers;
-    }
-
-    public function createVideoStream(int $cameraId)
-    {
-        $this->videoStream[$cameraId] = [
-            'createdAt' => time(),
-            'raw' => '',
-        ];
-    }
-
-    public function getVideoStream(int $cameraId = null)
-    {
-        return $this->videoStream[$cameraId] ?? null;
-    }
-
-    public function putRawToVideoStream(int $cameraId, string $raw)
-    {
-        $this->videoStream[$cameraId]['raw'] .= $raw;
-    }
-
-    public function getVideoStreams(): array
-    {
-        return $this->videoStream;
     }
 }

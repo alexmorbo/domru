@@ -252,17 +252,6 @@ class Server
             'memory' => $memory,
             'finances' => $registry->finances,
             'cameras' => $registry->cameras,
-            'streams' => array_map(
-                function ($cameraId, $cameraData) {
-                    return [
-                        'id' => $cameraId,
-                        'createdAt' => $cameraData['createdAt'],
-                        'bytes' => strlen($cameraData['raw'])
-                    ];
-                },
-                array_keys($registry->getVideoStreams()),
-                $registry->getVideoStreams()
-            ),
             'subscriberPlaces' => $registry->subscriberPlaces,
             'timers' => array_map(
         function ($name, $timerData) {

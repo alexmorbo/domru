@@ -90,13 +90,19 @@ class Domru
      */
     private $initiated;
 
+    /**
+     * @var bool
+     */
+    private $needServe = true;
+
     public function __construct()
     {
         $this->logger = new NullLogger();
         $this->loop = Factory::create();
         $this->client = new Browser($this->loop);
         $this->refreshToken = $_ENV['REFRESH_TOKEN'] ?? null;
-        $this->operatorId = $_ENV['OPERATOR_ID'] ?? null;
+        $this->operatorId = $_ENV['OPERATOR_ID'] ?? 2;
+        $this->needServe = $_ENV['SERVE'] ?? true;
         $this->initiated = [];
 
         if ($this->refreshToken === null || $this->operatorId === null) {
@@ -129,7 +135,7 @@ class Domru
 
     public function run()
     {
-        if ((bool)$_ENV['SERVE']) {
+        if ($this->needServe) {
             $this->serve();
         }
 
@@ -483,13 +489,6 @@ class Domru
             }
         }
 
-//        $videoStream = $registry->getVideoStream($cameraId);
-//        if (! $videoStream) {
-//            $registry->createVideoStream($cameraId);
-//        } else {
-//            return resolve($cameraId);
-//        }
-
         return $this->client->get(
             sprintf(self::API_CAMERA_GET_STREAM, $cameraId),
             [
@@ -504,25 +503,6 @@ class Domru
                 }
 
                 return resolve($data['data']['URL']);
-//
-//
-//                $stream = new ReadableResourceStream(fopen($data['data']['URL'], 'r'), $this->loop);
-//
-//                $stream->on(
-//                    'data',
-//                    function ($data) use ($cameraId, $registry) {
-//                        $registry->putRawToVideoStream($cameraId, $data);
-//                    }
-//                );
-//
-//                $stream->on(
-//                    'end',
-//                    function () {
-//                        echo "finished\n";
-//                    }
-//                );
-//
-//                return resolve($cameraId);
             },
             $this->apiError
         );
