@@ -1,31 +1,34 @@
 # Библиотека для работы с домофоном от domru.ru
 
-> Для работы необходим refresh_token, который можно получить [через MITM proxy](https://mitmproxy.org/)
+> Для работы необходим access_token, который можно получить из COOKIES после авторизации в личном кабинете domru.ru
 
 ## Для получения токена необходимо:
-1. Установить mitm proxy https://docs.mitmproxy.org/stable/overview-installation/
-2. Настроить на телефоне проксирование трафика на установленную прокси. Необходимо настроить SSL проксирование.
-3. Запустить приложение "Умный Дом.ru"
-4. Найти в mitmproxy запрос
+Пример будет реализован на Google Chrome
+1. Автоизоваться в личном кабинете https://domru.ru/
+2. Открыть [Google Chrome Dev Tools](https://developers.google.com/web/tools/chrome-devtools/open)
+3. Открыть вкладку Console и ввести внизу следующий код
 ```
-GET https://myhome.novotelecom.ru/auth/v2/session/refresh
+function getCookie(name) {
+  let matches = document.cookie.match(new RegExp(
+    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+  ));
+  return matches ? decodeURIComponent(matches[1]) : undefined;
+}
+getCookie('ACCESS_TOKEN')
 ```
-В теле ответа будет 
-```
-"refreshToken": "xxxxxxxx-xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
-```
+4. В ответ Вы получите 30-значный access_token
 
 Именно этот токен необходимо будет использовать для библиотеки
 
 ## Docker
 ```
-docker run --name lib_domru -d -p 8080:8080 -e REFRESH_TOKEN=xxxxxxxx-xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx alexmorbo/domru:latest
+docker run --name lib_domru -d -p 8080:8080 -e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx alexmorbo/domru:latest
 ```
 
 ... Где
 - `--name lib_domru` - имя контейнера
 - `-p 8080:8080` - порт, по которому будет доступен json api
-- `-e REFRESH_TOKEN=xxxxxxxx-xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx` - токен, полученный ранее черещ mitm proxy
+- `-e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` - токен, полученный ранее
 
 ## Api
 

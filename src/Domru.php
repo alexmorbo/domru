@@ -105,10 +105,15 @@ class Domru
         $this->needServe = $_ENV['SERVE'] ?? true;
         $this->initiated = [];
 
-        if ($this->refreshToken === null || $this->operatorId === null) {
-            throw new Exception('Empty refresh token or operatorId');
+        Registry::getInstance()->accessToken = $_ENV['ACCESS_TOKEN'] ?? null;
+
+        if ($this->operatorId === null) {
+            throw new Exception('Empty operatorId');
         }
 
+        if ($this->refreshToken === null && Registry::getInstance()->accessToken === null) {
+            throw new Exception('Empty refresh_token or access_token. You need define one of them');
+        }
 
         $this->apiError = function (ResponseException $e) {
             $error = 'Api error: ['.$e->getMessage().'] '.$e->getResponse()->getBody()->getContents();
@@ -136,14 +141,26 @@ class Domru
     public function run()
     {
         if ($this->needServe) {
-            $this->serve();
+            $this->serve()->then(
+                function ($log) {
+                    $this->logger->info($log);
+                },
+                function ($error) {
+                    $this->logger->critical($error);
+                    die;
+                }
+            );
         }
 
-        $this->getToken()->then(
-            function () {
-                $this->watchdog();
-            }
-        );
+        if ($this->refreshToken !== null) {
+            $this->getToken()->then(
+                function () {
+                    $this->watchdog();
+                }
+            );
+        } else {
+            $this->watchdog();
+        }
 
         $this->loop->run();
     }
@@ -203,7 +220,8 @@ class Domru
     private function serve()
     {
         $server = new Server($this);
-        $server->run();
+
+        return $server->run();
     }
 
     private function getToken(): PromiseInterface

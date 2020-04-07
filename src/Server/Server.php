@@ -124,7 +124,7 @@ class Server
         );
     }
 
-    public function run()
+    public function run(): PromiseInterface
     {
         try {
             $server = new \React\Http\Server(
@@ -154,7 +154,6 @@ class Server
             $server->on(
                 'error',
                 function (Exception $e) {
-//                    dump($e);
                     $this->logger->critical(
                         $e->getMessage(),
                         [
@@ -167,13 +166,13 @@ class Server
                 }
             );
 
-            $socket = new \React\Socket\Server('0.0.0.0:8080', $this->loop);
+            $socket = new \React\Socket\Server('0.0.0.0:28080', $this->loop);
             $server->listen($socket);
-        } catch (Exception $e) {
-            $this->logger->error($e->getMessage());
-        }
 
-        $this->logger->debug('Listening on '.str_replace('tcp:', 'http:', $socket->getAddress()));
+            return resolve('Listening on '.str_replace('tcp:', 'http:', $socket->getAddress()));
+        } catch (Exception $e) {
+            return reject($e->getMessage());
+        }
     }
 
     private function handleRequest(ServerRequestInterface $request)
