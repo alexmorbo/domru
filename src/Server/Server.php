@@ -166,7 +166,7 @@ class Server
                 }
             );
 
-            $socket = new \React\Socket\Server('0.0.0.0:28080', $this->loop);
+            $socket = new \React\Socket\Server('0.0.0.0:8080', $this->loop);
             $server->listen($socket);
 
             return resolve('Listening on '.str_replace('tcp:', 'http:', $socket->getAddress()));
