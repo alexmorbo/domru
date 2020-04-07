@@ -300,13 +300,13 @@ class Server
     private function videoStream(int $cameraId = null): PromiseInterface
     {
         return $this->domru->getCameraStream($cameraId)->then(
-            function ($cameraId) {
-//                return new Response(
-//                    200,
-//                    ['Content-Type' => 'video/x-flv'],
-//                    Registry::getInstance()->getVideoStream($cameraId)['raw']
-//                );
-                return $this->json(['url' => $cameraId]);
+            function ($streamUrl) {
+                return new Response(
+                    302,
+                    [
+                        'Location' => $streamUrl
+                    ]
+                );
             },
             function ($error) {
                 return reject($this->error($error));

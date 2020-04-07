@@ -73,7 +73,7 @@ HTTP GET http://host-ip:8080/video/snapshot/{placeId}/{accessControlId}
 
 В ответе будет image/jpeg с камеры домофона
 
-### Ссылка на видеопоток с камры домофона
+### Видеопоток с камры домофона
 ```
 HTTP GET http://host-ip:8080/video/stream/{placeId}/{accessControlId}
 ```
@@ -82,15 +82,4 @@ HTTP GET http://host-ip:8080/video/stream/{placeId}/{accessControlId}
 - `accessControlId` - идентификатор домофона, берется из `subscriberPlaces`
 > Если у вас всего 1 домофон на учетной записи, то передавать `placeId` и `accessControlId` не требуется 
 
-В ответе будет json следующего вида:
-```
-{
-    "url": "https://streamer2-zzzz.cctv.domru.ru:18080/rtsp/xxxxxx/yyyyyyyyy"
-}
-```
-Где:
-- `url` - ссылка на видео поток в формате `video/x-flv`
-> Ссылка на видеопоток действует 1 раз!
->
-> Для еще одного просмотра потока необходимо еще раз вызвать метод и получить новую ссылку!
-
+Ответом от сервиса будет перенаправление на ссылку, по которой можно получить видеопоток с камеры
