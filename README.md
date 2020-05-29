@@ -83,3 +83,50 @@ HTTP GET http://host-ip:8080/video/stream/{placeId}/{accessControlId}
 > Если у вас всего 1 домофон на учетной записи, то передавать `placeId` и `accessControlId` не требуется 
 
 Ответом от сервиса будет перенаправление на ссылку, по которой можно получить видеопоток с камеры
+
+
+## Home Assistant
+В HA можно добавить камеру с домофона, а также финансовую информацию и switch для открытия двери.
+
+### Натройки в configuration.yaml
+```
+sensors:
+  - platform: rest
+    name: domru_finances
+    resource: http://host-ip:8080/
+    value_template: '{{ value_json.finances.balance }}'
+    scan_interval: 3600
+    headers:
+      User-Agent: homeassistant
+
+camera:
+  - platform: generic
+    name: domru_domofon
+    still_image_url: http://host-ip:8080/video/snapshot
+    stream_source: http://host-ip:8080/video/stream
+
+rest_command:
+  domru_open_door:
+    url: 'http://host-ip:8080/open'
+```
+
+### Пример карточки в Lovelace
+```
+- type: picture-glance
+  title: Домофон
+  entities:
+    - entity: script.domru
+      icon: 'mdi:door-open'
+      name: Открыть дверь
+      tap_action:
+        action: toggle
+  hold_action:
+    action: call-service
+    service: rest_command.domru_open_door
+  camera_image: camera.domru_domofon
+- type: entities
+  entities:
+    - sensor.domru_finances
+```
+
+![Lovelace](lovelace.png)
