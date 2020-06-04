@@ -21,8 +21,15 @@ getCookie('ACCESS_TOKEN')
 Именно этот токен необходимо будет использовать для библиотеки
 
 ## Docker
+
+### AMD64 - Intel nuc, etc..
 ```
 docker run --name lib_domru -d -p 8080:8080 -e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx alexmorbo/domru:latest
+```
+
+### Raspberry PI
+```
+docker run --name lib_domru -d -p 8080:8080 -e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx alexmorbo/domru:arm32v7
 ```
 
 ... Где
@@ -33,6 +40,9 @@ docker run --name lib_domru -d -p 8080:8080 -e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxx
 ## Api
 
 ### Общая информация
+
+> `host-ip` - IP малины или хост машины, где запущен контейнер, например 192.168.1.20 
+
 ```
 HTTP GET http://host-ip:8080/
 ```
