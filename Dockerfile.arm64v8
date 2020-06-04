@@ -1,9 +1,9 @@
 FROM arm64v8/php:7.4-cli
 
 # Update & instal software
-RUN apt-get update > /dev/null 2>&1 && \
-    apt-get upgrade -y > /dev/null 2>&1 && \
-    apt-get install -y zip unzip gnupg apt-transport-https lsb-release cron git > /dev/null 2>&1
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y zip unzip gnupg apt-transport-https lsb-release cron git
 
 # Copy composer files
 COPY composer.json /app/
