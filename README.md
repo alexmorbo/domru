@@ -24,18 +24,24 @@ getCookie('ACCESS_TOKEN')
 
 ### AMD64 - Intel nuc, etc..
 ```
-docker run --name lib_domru -d -p 8080:8080 -e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx alexmorbo/domru:latest
+docker run --name lib_domru -d -p 8080:8080 -e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -e OPERATOR_ID=2 alexmorbo/domru:latest
 ```
 
 ### Raspberry PI
 ```
-docker run --name lib_domru -d -p 8080:8080 -e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx alexmorbo/domru:arm32v7
+docker run --name lib_domru -d -p 8080:8080 -e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx -e OPERATOR_ID=2 alexmorbo/domru:arm32v7
 ```
 
 ... Где
 - `--name lib_domru` - имя контейнера
 - `-p 8080:8080` - порт, по которому будет доступен json api
 - `-e ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` - токен, полученный ранее
+- `-e OPERATOR_ID=x` - идентификатор конечного оператора.
+
+####
+Известные операторы на данный момент:
+- 2 - Санкт-Петербург, Интерзет.ДомРу
+- 42 - Уфа
 
 ## Api
 
