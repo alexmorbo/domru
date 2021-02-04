@@ -15,6 +15,7 @@
 
                                     <ul class="list-group">
                                         {% for accountIndex, account in accounts %}
+                                            {% if account.accountId %}
                                             <a href="{{ hassioIngress }}{{ path('login_address', {phone: phone, index: accountIndex}) }}" class="text-decoration-none">
                                                 <li class="list-group-item list-group-item-action">
                                                     <div class="d-flex w-100 justify-content-between">
@@ -24,6 +25,7 @@
                                                     <p class="mb-1">Адрес: {{ account.address }}</p>
                                                 </li>
                                             </a>
+                                            {% endif %}
                                         {% endfor %}
                                     </ul>
                                 </div>

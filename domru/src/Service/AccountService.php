@@ -15,9 +15,10 @@ class AccountService
     public function __construct()
     {
         $this->path = '/share/domru/accounts';
+        $this->checkStorage();
     }
 
-    public function getAccounts(): array
+    public function checkStorage()
     {
         $pathFolder = dirname($this->path);
 
@@ -25,6 +26,13 @@ class AccountService
             mkdir($pathFolder, 0777, true);
         }
 
+        if (! file_exists($this->path)) {
+            file_put_contents($this->path, '');
+        }
+    }
+
+    public function getAccounts(): array
+    {
         if (!file_exists($this->path)) {
             return [];
         }

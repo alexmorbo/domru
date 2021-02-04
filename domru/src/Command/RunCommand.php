@@ -126,14 +126,22 @@ class RunCommand extends Command
         );
 
         $routesArray = [
-            'fetchInfo'     => [
+            'fetchFullInfo'  => [
                 'path' => '/api',
                 'data' => [
                     '_controller' => self::class,
-                    '_method'     => 'fetchInfo',
+                    '_method'     => 'fetchFullInfo',
                 ],
             ],
-            'openDoor'      => [
+            'fetchInfo'  => [
+                'path' => '/api/{account}',
+                'data' => [
+                    '_controller' => self::class,
+                    '_method'     => 'fetchInfo',
+                    'account'     => null,
+                ],
+            ],
+            'openDoor'       => [
                 'path' => '/api/open/{account}/{placeId}/{accessControlId}',
                 'data' => [
                     '_controller'     => self::class,
@@ -143,27 +151,26 @@ class RunCommand extends Command
                     'accessControlId' => null,
                 ],
             ],
-            'videoSnapshot' => [
-                'path' => '/api/video/snapshot/{account}/{placeId}/{accessControlId}',
-                'data' => [
-                    '_controller'     => self::class,
-                    '_method'         => 'videoSnapshot',
-                    'account'         => null,
-                    'placeId'         => null,
-                    'accessControlId' => null,
-                ],
-            ],
-            'videoStream'   => [
-                'path' => '/api/video/stream/{account}/{cameraId}/{timestamp}',
+            'cameraSnapshot' => [
+                'path' => '/api/camera/snapshot/{account}/{cameraId}',
                 'data' => [
                     '_controller' => self::class,
-                    '_method'     => 'videoStream',
+                    '_method'     => 'cameraSnapshot',
+                    'account'     => null,
+                    'cameraId'    => null,
+                ],
+            ],
+            'cameraStream'   => [
+                'path' => '/api/camera/stream/{account}/{cameraId}/{timestamp}',
+                'data' => [
+                    '_controller' => self::class,
+                    '_method'     => 'cameraStream',
                     'account'     => null,
                     'cameraId'    => null,
                     'timestamp'   => null,
                 ],
             ],
-            'events'        => [
+            'events'         => [
                 'path' => '/api/events/{account}/{placeId}',
                 'data' => [
                     '_controller' => self::class,
@@ -210,7 +217,7 @@ class RunCommand extends Command
         }
     }
 
-    private function fetchInfo(): PromiseInterface
+    private function fetchFullInfo(): PromiseInterface
     {
         $memory = memory_get_usage(true);
         $registry = $this->registry->all();
@@ -240,6 +247,40 @@ class RunCommand extends Command
         );
     }
 
+    private function fetchInfo(string $account): PromiseInterface
+    {
+        $memory = memory_get_usage(true);
+        $registry = $this->registry->all();
+
+        $promises = [];
+        if ($this->request->query->get('events') && is_array($registry['accounts'])) {
+            foreach ($registry['accounts'] as $accountId => &$accountData) {
+                if ($account != $accountId) {
+                    continue;
+                }
+
+                $promises[$accountId.'_events'] = $this->domru->events($accountId)
+                    ->then(
+                        function ($events) use (&$accountData) {
+                            $accountData['events'] = $events;
+                        }
+                    );
+            }
+        }
+
+        return all($promises)->then(
+            fn() => $this->json(
+                array_merge(
+                    $registry['accounts'][$account],
+                    [
+                        'memoryHuman' => $this->memoryConvert($memory),
+                        'memory'      => $memory,
+                    ]
+                )
+            )
+        );
+    }
+
     private function openDoor(string $account, int $placeId = null, int $accessControlId = null): PromiseInterface
     {
         return $this->domru->openDoor($account, $placeId, $accessControlId)->then(
@@ -252,9 +293,9 @@ class RunCommand extends Command
         );
     }
 
-    private function videoSnapshot(string $account, int $placeId = null, int $accessControlId = null): PromiseInterface
+    private function cameraSnapshot(string $account, int $cameraId = null): PromiseInterface
     {
-        return $this->domru->videoSnapshot($account, $placeId, $accessControlId)->then(
+        return $this->domru->cameraSnapshot($account, $cameraId)->then(
             function ($data) {
                 return $this->image($data['content'], $data['mime']);
             },
@@ -264,9 +305,9 @@ class RunCommand extends Command
         );
     }
 
-    private function videoStream(string $account, int $cameraId = null, int $timestamp = null): PromiseInterface
+    private function cameraStream(string $account, int $cameraId = null, int $timestamp = null): PromiseInterface
     {
-        return $this->domru->videoStream($account, $cameraId, $timestamp)->then(
+        return $this->domru->cameraStream($account, $cameraId, $timestamp)->then(
             function ($data) {
                 return new Response(302, ['Location' => $data]);
             },

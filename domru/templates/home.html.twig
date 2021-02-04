@@ -52,14 +52,12 @@
                                         {% for place in account.subscriberPlaces %}
                                             <div class="row text-center">
                                                 <div class="col">
-                                                    <div>
-                                                        <figure class="figure">
-                                                            <img src="{{ hassioIngress }}/api/video/snapshot/{{ account.address.accountId }}/{{ place.place.id }}/{{ place.place.accessControls[0].id }}" class="figure-img img-fluid rounded" alt="Камера">
-                                                            <figcaption class="figure-caption text-end">{{ place.place.accessControls[0].name }}</figcaption>
-                                                        </figure>
-                                                    </div>
+                                                    <figure class="figure">
+                                                        <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ place.cameraId }}" class="figure-img img-fluid rounded" alt="Камера">
+                                                        <figcaption class="figure-caption text-end">{{ place.place.accessControls[0].name }}</figcaption>
+                                                    </figure>
                                                 </div>
-                                                <div class="col">
+                                                <div class="col text-right">
                                                     <div class="form-group">
                                                         <button class="btn btn-primary"
                                                                 onclick="openDoor(this, '{{ account.address.accountId }}', '{{ place.place.id }}', '{{ place.place.accessControls[0].id }}')">
@@ -74,12 +72,35 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="row text-left mt-5">
-                                                <div class="col video-stream" data-account="{{ account.address.accountId }}">
-                                                    <h4>Ссылка на видеопоток</h4>
-                                                    <code>http://{{ hostIp }}:10080{{ hassioIngress }}/api/video/stream/{{ account.address.accountId }}/{{ place.cameraId }}</code>
+                                            <div class="row text-left">
+                                                <div class="col">
+                                                    <h4>Видеопоток с камеры домофона</h4>
+                                                    <div class="form-group">
+                                                        <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080{{ hassioIngress }}/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}">
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            {% if account.cameras|length > 1 %}
+                                            <div class="row text-left mt-5">
+                                                <div class="col-12">
+                                                    <h4>Дополнительные камеры</h4>
+                                                </div>
+                                                {% for camera in account.cameras %}
+                                                    {% if camera.ID != place.cameraId %}
+                                                        <div class="col-6">
+                                                            <figure class="figure">
+                                                                <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ camera.ID }}" class="figure-img img-fluid rounded" alt="Камера">
+                                                                <figcaption class="figure-caption text-end">{{ camera.Name }}</figcaption>
+                                                                <div class="form-group">
+                                                                    <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080{{ hassioIngress }}/api/camera/stream/{{ account.address.accountId }}/{{ camera.ID }}">
+                                                                </div>
+                                                            </figure>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
 
                                             {% if account.events %}
                                                 <div class="row text-left mt-5">
@@ -106,7 +127,7 @@
                                                                     {% if event.eventTypeName in validEvents %}
                                                                     <div id="content_event_{{ event.id }}" class="collapse{% if i == 0 %} show{% endif %}" aria-labelledby="header_event_{{ event.id }}" data-parent="#events_{{ account.address.accountId }}">
                                                                         <div class="card-body">
-                                                                            <code>http://{{ hostIp }}:10080{{ hassioIngress }}/api/video/stream/{{ account.address.accountId }}/{{ place.cameraId }}/{{ event.timestamp }}</code>
+                                                                            <code>http://{{ hostIp }}:10080{{ hassioIngress }}/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}/{{ event.timestamp }}</code>
                                                                         </div>
                                                                     </div>
                                                                     {% endif %}
@@ -124,8 +145,30 @@
                                                     <pre>camera:
   - platform: generic
     name: domru_domofon_{{ place.cameraId }}
-    still_image_url: http://{{ hostIp }}:10080/api/video/snapshot/{{ account.address.accountId }}/{{ place.place.id }}/{{ place.place.accessControls[0].id }}
-    stream_source: http://{{ hostIp }}:10080/api/video/stream/{{ account.address.accountId }}/{{ place.cameraId }}
+    still_image_url: http://{{ hostIp }}:10080/api/camera/snapshot/{{ account.address.accountId }}/{{ place.cameraId }}
+    stream_source: http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}
+{% if account.cameras|length > 1 %}
+    {% for camera in account.cameras %}
+        {% if camera.ID != place.cameraId %}
+
+  - platform: generic
+    name: domru_domofon_{{ camera.ID }}
+    still_image_url: http://{{ hostIp }}:10080/api/camera/snapshot/{{ account.address.accountId }}/{{ camera.ID }}
+    stream_source: http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ camera.ID }}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+{% if account.finances and account.finances.balance %}
+sensors:
+  - platform: rest
+    name: domru_domofon_finances
+    resource: http://{{ hostIp }}:10080/api/{{ account.address.accountId }}
+    value_template: '{{ '{{' }} value_json.finances.balance {{ '}}' }}'
+    scan_interval: 3600
+    headers:
+      User-Agent: homeassistant
+{% endif %}
 
 rest_command:
   domru_open_door_{{ account.address.accountId }}:
@@ -164,13 +207,14 @@ script:
             {% endfor %}
         {% endif %}
     </div>
-    <div class="row justify-content-center">
-        <div class="col-xl-6 col-md-10 col-lg-10 col-sm-12">
-            <div class="d-grid gap-2 d-md-block">
+    <div class="row justify-content-center mb-5">
+        <div class="col-xl-6 col-md-10 col-lg-10 col-sm-12 mb-5">
+            <div class="d-grid gap-2 d-md-block mb-5">
                 <a href="{{ hassioIngress }}{{ path('login_login') }}" class="btn btn-primary d-block">Добавить еще</a>
             </div>
         </div>
     </div>
+
     <script>
 		function openDoor(self, accountId, placeId, accessControlId) {
 			$.ajax({

@@ -53,9 +53,9 @@ class Domru
 
     public const API_OPEN_DOOR = 'https://myhome.novotelecom.ru/rest/v1/places/%d/accesscontrols/%d/actions';
 
-    public const API_VIDEO_SNAPSHOT = 'https://myhome.novotelecom.ru/rest/v1/places/%d/accesscontrols/%d/videosnapshots';
-
     public const API_CAMERA_GET_STREAM = 'https://myhome.novotelecom.ru/rest/v1/forpost/cameras/%d/video?';
+
+    public const API_CAMERA_GET_SNAPSHOT = 'https://myhome.novotelecom.ru/rest/v1/forpost/cameras/%d/snapshots?';
 
     public const API_EVENTS = 'https://myhome.novotelecom.ru/rest/v1/places/%d/events?allowExtentedActions=true';
 
@@ -545,67 +545,68 @@ class Domru
             );
     }
 
-    public function videoSnapshot(string $account, int $placeId = null, int $accessControlId = null): PromiseInterface
+    public function cameraSnapshot(string $account, int $cameraId = null): PromiseInterface
     {
         if ($this->registry->state !== AsyncRegistry::STATE_LOOP) {
             return reject('Api not ready');
         }
 
-        return $this->getPlaceIdAccessControlId($account, $placeId, $accessControlId)
-            ->then(
-                function ($use) use ($account) {
-                    if ($use['place']['accessControls'][0]['allowVideo'] === false) {
-                        return reject('Access control allowVideo disabled');
-                    }
+        $cameras = $this->registry->fetch('cameras', $account);
 
-                    $this->logger->debug(
-                        'Trying to get video snapshot',
-                        ['placeId' => $use['placeId'], 'accessControlId' => $use['accessControlId']]
-                    );
+        if (!count($cameras) || !isset($cameras[0]['ID'])) {
+            return reject('There is no available camera for streaming');
+        }
 
-                    return $this->client->get(
-                        sprintf(self::API_VIDEO_SNAPSHOT, $use['placeId'], $use['accessControlId']),
-                        [
-                            'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
-                            'Content-Type'  => 'application/json',
-                            'User-Agent'    => $this->asyncUserAgent,
-                            'Authorization' => 'Bearer '.$this->registry->getToken($account),
-                        ]
-                    )->then(
-                        function (ResponseInterface $response) use ($account) {
-                            if ($response->getHeader('Content-Type')[0] !== 'image/jpeg') {
-                                return reject('Api error: [HTTP OK] Response image failed');
-                            }
+        $cameraToUse = null;
+        foreach ($cameras as $camera) {
+            if ($cameraId && (int)$camera['ID'] === $cameraId) {
+                // Необходимая камера
+                break;
+            }
+            if ($cameraId === null) {
+                $cameraId = (int)$camera['ID'];
+                break;
+            }
+        }
 
-                            $this->logger->debug('Snapshot success');
-
-                            return resolve(
-                                [
-                                    'mime'    => 'image/jpeg',
-                                    'content' => $response->getBody()->getContents(),
-                                ]
-                            );
-                        },
-                        function (ResponseException $e) use ($account) {
-                            $this->apiError($account, $e);
-
-                            return resolve(
-                                [
-                                    'status'       => false,
-                                    'errorCode'    => $e->getCode(),
-                                    'errorMessage' => $e->getMessage(),
-                                ]
-                            );
-                        }
-                    );
-                },
-                function ($error) {
-                    return reject($error);
+        return $this->client->get(
+            sprintf(self::API_CAMERA_GET_SNAPSHOT, $cameraId),
+            [
+                'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
+                'Content-Type'  => 'application/json',
+                'User-Agent'    => $this->asyncUserAgent,
+                'Authorization' => 'Bearer '.$this->registry->getToken($account),
+            ]
+        )->then(
+            function (ResponseInterface $response) use ($account) {
+                if ($response->getHeader('Content-Type')[0] !== 'image/jpeg') {
+                    return reject('Api error: [HTTP OK] Response image failed');
                 }
-            );
+
+                $this->logger->debug('Snapshot success');
+
+                return resolve(
+                    [
+                        'mime'    => 'image/jpeg',
+                        'content' => $response->getBody()->getContents(),
+                    ]
+                );
+            },
+            function (ResponseException $e) use ($account) {
+                $this->apiError($account, $e);
+
+                return resolve(
+                    [
+                        'status'       => false,
+                        'errorCode'    => $e->getCode(),
+                        'errorMessage' => $e->getMessage(),
+                    ]
+                );
+            }
+        );
     }
 
-    public function videoStream(string $account, int $cameraId = null, int $timestamp = null): PromiseInterface
+    public function cameraStream(string $account, int $cameraId = null, int $timestamp = null): PromiseInterface
     {
         if ($this->registry->state !== AsyncRegistry::STATE_LOOP) {
             return reject('Api not ready');

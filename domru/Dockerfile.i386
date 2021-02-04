@@ -1,4 +1,4 @@
-FROM arm32v7/php:7.4.14-fpm
+FROM i386/php:7.4.14-fpm
 
 # Update & instal software
 RUN apt-get update && \

@@ -13,4 +13,4 @@
 После установки необходимо зайти в Web UI (Open WEB UI) и авторизоваться с помощью телефона и смс.
 
 
-![Lovelace](domru/lovelace.png)
+![Lovelace](lovelace.png)

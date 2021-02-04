@@ -30,20 +30,20 @@ class LoginController extends AbstractController
         $error = null;
 
         if ($request->getMethod() === 'POST') {
-//            $accounts = null;
-                $accounts = $domru->getAccounts($request->get('phone'), Domru::LOGIN_BY_PHONE);
-//            if ($request->get('phone')) {
-//            } elseif ($request->get('account')) {
-//                $accounts = $domru->getAccounts($request->get('phone'), Domru::LOGIN_BY_ACCOUNT);
-//            }
+            //            $accounts = null;
+            $accounts = $domru->getAccounts($request->get('phone'), Domru::LOGIN_BY_PHONE);
+            //            if ($request->get('phone')) {
+            //            } elseif ($request->get('account')) {
+            //                $accounts = $domru->getAccounts($request->get('phone'), Domru::LOGIN_BY_ACCOUNT);
+            //            }
 
             if ($accounts) {
                 return $this->render(
                     'login-accounts.html.twig',
                     [
                         'hassioIngress' => $this->hassioIngress,
-                        'phone'    => $accounts['phone'],
-                        'accounts' => $accounts['accounts'],
+                        'phone'         => $accounts['phone'],
+                        'accounts'      => $accounts['accounts'],
                     ]
                 );
             } else {
@@ -55,7 +55,7 @@ class LoginController extends AbstractController
             'login.html.twig',
             [
                 'hassioIngress' => $this->hassioIngress,
-                'error' => $error
+                'error'         => $error,
             ]
         );
     }
@@ -83,8 +83,8 @@ class LoginController extends AbstractController
                 'login-sms.html.twig',
                 [
                     'hassioIngress' => $this->hassioIngress,
-                    'phone' => $request->attributes->get('phone'),
-                    'index' => (int)$request->attributes->get('index'),
+                    'phone'         => $request->attributes->get('phone'),
+                    'index'         => (int)$request->attributes->get('index'),
                 ]
             );
         } catch (Exception $e) {
@@ -92,7 +92,7 @@ class LoginController extends AbstractController
                 'login.html.twig',
                 [
                     'hassioIngress' => $this->hassioIngress,
-                    'error' => $e->getResponse()->getBody()->getContents()
+                    'error'         => $e->getResponse()->getBody()->getContents(),
                 ]
             );
         }
@@ -143,10 +143,13 @@ class LoginController extends AbstractController
                     if ($this->hassioIngress) {
                         $redirect->setTargetUrl($this->hassioIngress.$redirect->getTargetUrl());
                     }
+
+                    return $redirect;
                 } else {
-                    if ($checks > 5) {
+                    if ($checks > 10) {
                         throw new Exception('Internal Error');
                     }
+                    $checks++;
                     sleep(2);
                 }
             }
@@ -155,9 +158,9 @@ class LoginController extends AbstractController
                 'login-sms.html.twig',
                 [
                     'hassioIngress' => $this->hassioIngress,
-                    'phone' => $request->attributes->get('phone'),
-                    'index' => (int)$request->attributes->get('index'),
-                    'error' => $e->getResponse()->getBody()->getContents()
+                    'phone'         => $request->attributes->get('phone'),
+                    'index'         => (int)$request->attributes->get('index'),
+                    'error'         => $e->getResponse()->getBody()->getContents(),
                 ]
             );
         }
