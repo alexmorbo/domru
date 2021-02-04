@@ -1,0 +1,28 @@
+{
+	"name": "Smart Dom.ru",
+	"version": "0.1.0",
+	"slug": "domru",
+	"description": "Умный Дом.ru",
+	"url": "https://github.com/alexmorbo/domru",
+	"startup": "application",
+	"webui": "http://[HOST]:[PORT:80]/",
+	"arch": ["amd64", "armv7", "aarch64"],
+	"boot": "auto",
+	"schema": false,
+	"hassio_api": true,
+	"map": [
+		"share:rw"
+	],
+	"ports": {
+		"80/tcp": 10080
+	},
+	"ports_description": {
+		"80/tcp": "GUI http access"
+	},
+	"image": "alexmorbo/domru-{arch}",
+	"ingress": true,
+	"ingress_port": 80,
+	"panel_icon": "mdi:home-city-outline",
+	"panel_title": "Умный Дом.ru",
+	"panel_admin": true
+}

@@ -1,0 +1,56 @@
+FROM arm32v7/php:7.4.14-fpm
+
+# Update & instal software
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y nginx supervisor zip unzip gnupg apt-transport-https lsb-release cron git \
+      libicu-dev
+
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- \
+    --filename=composer \
+    --install-dir=/usr/bin \
+    --version=2.0.8 && \
+    chmod +x /usr/bin/composer
+
+RUN docker-php-ext-install -j$(nproc) intl
+
+COPY ./docker/vhost.conf /etc/nginx/sites-enabled/default
+COPY ./docker/docker-entrypoint.sh /opt
+COPY ./docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN chmod +x /opt/docker-entrypoint.sh
+
+WORKDIR /app
+
+# Copy composer files
+COPY ./composer.json /app/
+COPY ./composer.lock /app/
+COPY ./symfony.lock /app/
+
+# Install composer dependecies
+RUN composer install --no-interaction --no-progress --prefer-dist --no-dev --no-autoloader --ansi --no-scripts
+
+# Copy sources
+COPY ./src /app/src
+COPY ./config /app/config
+COPY ./public /app/public
+COPY ./templates /app/templates
+COPY ./bin /app/bin
+COPY ./.env /app/.env
+
+# Finish composer
+RUN composer dump-autoload --no-scripts --no-dev --optimize --quiet
+
+# Make dirs
+RUN mkdir -p var/cache var/log var/sessions /data \
+  && touch /data/accounts
+
+# Set nginx user root
+RUN ["sed", "-i", "s/www-data/root/g", "/etc/nginx/nginx.conf"]
+RUN ["sed", "-i", "s/www-data/root/g", "/usr/local/etc/php-fpm.d/www.conf"]
+
+EXPOSE 80
+
+ENTRYPOINT ["/opt/docker-entrypoint.sh"]
+
+CMD ["php-fpm"]

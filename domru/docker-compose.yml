@@ -1,0 +1,13 @@
+version: '3.3'
+services:
+  domru:
+    env_file:
+      - ./.env
+    container_name: domru_dev
+    build:
+      context: .
+      dockerfile: ./Dockerfile.dev
+    volumes:
+      - ./:/app:delegated
+    ports:
+      - '17070:80'

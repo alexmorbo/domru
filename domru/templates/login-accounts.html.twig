@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-6 col-md-10 col-lg-10 col-sm-12">
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="p-5">
+                                    <div class="text-center">
+                                        <h1 class="h4 mb-4">{{ phone }}</h1>
+                                    </div>
+
+                                    <ul class="list-group">
+                                        {% for accountIndex, account in accounts %}
+                                            <a href="{{ hassioIngress }}{{ path('login_address', {phone: phone, index: accountIndex}) }}" class="text-decoration-none">
+                                                <li class="list-group-item list-group-item-action">
+                                                    <div class="d-flex w-100 justify-content-between">
+                                                        <h5 class="mb-1">Договор: {{ account.accountId }}</h5>
+                                                        <small class="text-muted">Регион: {{ account.operatorId }}</small>
+                                                    </div>
+                                                    <p class="mb-1">Адрес: {{ account.address }}</p>
+                                                </li>
+                                            </a>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

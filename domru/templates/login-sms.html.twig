@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-6 col-md-10 col-lg-10 col-sm-12">
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="p-5">
+                                    <div class="text-center">
+                                        <h1 class="h4 mb-4">Введите код из смс</h1>
+                                    </div>
+                                    {% if error %}
+                                        <div class="alert alert-danger">
+                                            {{ error }}
+                                        </div>
+                                    {% endif %}
+
+                                    <form class="user" action="{{ hassioIngress }}{{ path('login_sms', {phone: phone, index: index}) }}" method="post">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control form-control-user" id="sms" name="sms" value="" placeholder="Код из смс">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-user btn-block">
+                                            Войти
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

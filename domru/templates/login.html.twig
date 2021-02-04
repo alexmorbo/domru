@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-6 col-md-10 col-lg-10 col-sm-12">
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="p-5">
+                                    <div class="text-center">
+                                        <h1 class="h4 mb-4">Вход</h1>
+                                    </div>
+                                    {% if error %}
+                                        <div class="alert alert-danger">
+                                            {{ error }}
+                                        </div>
+                                    {% endif %}
+
+                                    <form class="user" action="{{ hassioIngress }}{{ path('login_login') }}" method="post">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control form-control-user" id="phone" name="phone" value="" placeholder="Номер телефона 79991112233">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-user btn-block">
+                                            Войти по номеру телефона
+                                        </button>
+                                    </form>
+
+{#                                    <div class="text-center mt-5">#}
+{#                                        <h4>или</h4>#}
+{#                                    </div>#}
+
+{#                                    <form class="user mt-5" action="{{ path('login_login') }}" method="post">#}
+{#                                        <div class="row">#}
+{#                                            <div class="col">#}
+{#                                                <input type="text" class="form-control form-control-user" id="account" name="account" value="" placeholder="Номер договора" />#}
+{#                                            </div>#}
+{#                                            <div class="col">#}
+{#                                                <input type="password" class="form-control form-control-user" id="password" name="password" value="" placeholder="Пароль" />#}
+{#                                            </div>#}
+{#                                        </div>#}
+
+{#                                        <div class="row mt-3">#}
+{#                                            <div class="col">#}
+{#                                                <button type="submit" class="btn btn-primary btn-user btn-block">#}
+{#                                                    Войти по номеру договора#}
+{#                                                </button>#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                    </form>#}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

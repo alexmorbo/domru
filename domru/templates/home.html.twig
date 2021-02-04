@@ -1,0 +1,199 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        {% if error %}
+            <div class="col-xl-6 col-md-10 col-lg-10 col-sm-12">
+                <div class="card o-hidden border-0 my-5">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                {{ error }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            {% for account in api.accounts %}
+                <div class="col-xl-6 col-md-10 col-lg-10 col-sm-12">
+                    <div class="card o-hidden border-0 shadow-lg my-5">
+                        <div class="card-body p-0">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="p-5">
+                                        <div class="text-center">
+                                            <h1 class="h4 mb-4 {% if account.finances and account.finances.blocked == false %}text-success{% else %}text-danger{% endif %}">
+                                                {{ account.address.accountId }}
+                                            </h1>
+                                        </div>
+
+                                        <table class="table table-striped">
+                                            <tr>
+                                                <td>Адрес</td>
+                                                <td>{{ account.subscriberPlaces[0].place.address.visibleAddress }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Номер телефона</td>
+                                                <td>{{ account.phone }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Токен доступа</td>
+                                                <td>{{ account.data.refreshToken }}</td>
+                                            </tr>
+                                            {% if account.finances and account.finances.balance %}
+                                                <tr>
+                                                    <td>Баланс</td>
+                                                    <td>{{ account.finances.balance }} руб</td>
+                                                </tr>
+                                            {% endif %}
+                                        </table>
+
+                                        {% for place in account.subscriberPlaces %}
+                                            <div class="row text-center">
+                                                <div class="col">
+                                                    <div>
+                                                        <figure class="figure">
+                                                            <img src="{{ hassioIngress }}/api/video/snapshot/{{ account.address.accountId }}/{{ place.place.id }}/{{ place.place.accessControls[0].id }}" class="figure-img img-fluid rounded" alt="Камера">
+                                                            <figcaption class="figure-caption text-end">{{ place.place.accessControls[0].name }}</figcaption>
+                                                        </figure>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                        <button class="btn btn-primary"
+                                                                onclick="openDoor(this, '{{ account.address.accountId }}', '{{ place.place.id }}', '{{ place.place.accessControls[0].id }}')">
+                                                            Открыть дверь
+                                                        </button>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <button class="btn btn-primary"
+                                                                onclick="toggleEvents(this, '{{ account.address.accountId }}')">
+                                                            Показать все события
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row text-left mt-5">
+                                                <div class="col video-stream" data-account="{{ account.address.accountId }}">
+                                                    <h4>Ссылка на видеопоток</h4>
+                                                    <code>http://{{ hostIp }}:10080{{ hassioIngress }}/api/video/stream/{{ account.address.accountId }}/{{ place.cameraId }}</code>
+                                                </div>
+                                            </div>
+
+                                            {% if account.events %}
+                                                <div class="row text-left mt-5">
+                                                    <div class="col">
+                                                        <h4>Последние события</h4>
+                                                        <div id="events_{{ account.address.accountId }}">
+                                                            {% for i, event in account.events %}
+                                                                <div class="card{% if i >= 5 %} d-none hidden-events{% endif %}" data-accountId="{{ account.address.accountId }}">
+                                                                    <div id="header_event_{{ event.id }}">
+                                                                        <div class="row mb-0" data-toggle="collapse" data-target="#content_event_{{ event.id }}" aria-expanded="true" aria-controls="content_event_{{ event.id }}">
+                                                                            <div class="col-8">
+                                                                                <button class="btn btn-link {% if event.eventTypeName in validEvents %}{% if event.eventTypeName == 'accessControlCallMissed' %}text-danger{% else %}text-info{% endif %}{% else %}text-secondary{% endif %}">
+                                                                                    {{ event.message }}
+                                                                                </button>
+                                                                            </div>
+                                                                            <div class="col-4 text-right">
+                                                                                <button class="btn btn-link text-muted">
+                                                                                    {{ event.timestamp|format_datetime('short', 'short', locale='ru') }}
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {% if event.eventTypeName in validEvents %}
+                                                                    <div id="content_event_{{ event.id }}" class="collapse{% if i == 0 %} show{% endif %}" aria-labelledby="header_event_{{ event.id }}" data-parent="#events_{{ account.address.accountId }}">
+                                                                        <div class="card-body">
+                                                                            <code>http://{{ hostIp }}:10080{{ hassioIngress }}/api/video/stream/{{ account.address.accountId }}/{{ place.cameraId }}/{{ event.timestamp }}</code>
+                                                                        </div>
+                                                                    </div>
+                                                                    {% endif %}
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+
+                                            <div class="row text-left mt-5">
+                                                <div class="col">
+                                                    <h4>Интеграция в Home Assistant</h4>
+                                                    <h5><code>configuration.yaml</code></h5>
+                                                    <pre>camera:
+  - platform: generic
+    name: domru_domofon_{{ place.cameraId }}
+    still_image_url: http://{{ hostIp }}:10080/api/video/snapshot/{{ account.address.accountId }}/{{ place.place.id }}/{{ place.place.accessControls[0].id }}
+    stream_source: http://{{ hostIp }}:10080/api/video/stream/{{ account.address.accountId }}/{{ place.cameraId }}
+
+rest_command:
+  domru_open_door_{{ account.address.accountId }}:
+    url: http://{{ hostIp }}:10080/api/open/{{ account.address.accountId }}/{{ place.place.id }}/{{ place.place.accessControls[0].id }}
+
+script:
+  domru_open_door_{{ account.address.accountId }}:
+    sequence:
+      - service: rest_command.domru_open_door_{{ account.address.accountId }}
+                                                    </pre>
+
+                                                    <h5><code>ui-lovelace.yaml</code></h5>
+                                                    <pre>- type: picture-glance
+  title: {{ place.place.accessControls[0].name }}
+  entities:
+    - entity: script.domru_open_door_{{ account.address.accountId }}
+      icon: "mdi:door-open"
+      name: Открыть дверь
+      tap_action:
+        action: toggle
+  hold_action:
+      action: call-service
+      service: rest_command.domru_open_door_{{ account.address.accountId }}
+  camera_image: camera.domru_domofon_{{ place.cameraId }}
+</pre>
+
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-xl-6 col-md-10 col-lg-10 col-sm-12">
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{{ hassioIngress }}{{ path('login_login') }}" class="btn btn-primary d-block">Добавить еще</a>
+            </div>
+        </div>
+    </div>
+    <script>
+		function openDoor(self, accountId, placeId, accessControlId) {
+			$.ajax({
+                url: '{{ hassioIngress }}/api/open/' + accountId + '/' + placeId + '/' + accessControlId,
+                method: 'get',
+                beforeSend: function() {
+	                $(self).removeClass('btn-primary').addClass('btn-secondary').text('Открываем')
+                },
+                success: function () {
+	                $(self).removeClass('btn-secondary').addClass('btn-primary').text('Открыть дверь')
+                }
+			});
+		}
+
+		function toggleEvents(self, accountId) {
+            var s = $(self);
+            if (s.text() != 'Показать все события') {
+                s.text('Показать последние 5 событий');
+            } else {
+	            s.text('Показать все события');
+            }
+
+			$('.hidden-events[data-accountId='+accountId+']').toggleClass('d-none');
+        }
+    </script>
+{% endblock %}

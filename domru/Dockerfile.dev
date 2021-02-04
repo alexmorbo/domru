@@ -1,0 +1,31 @@
+FROM php:7.4.14-fpm
+
+# Update & instal software
+RUN apt-get update > /dev/null 2>&1 && \
+    apt-get upgrade -y > /dev/null 2>&1 && \
+    apt-get install -y nginx supervisor zip unzip gnupg apt-transport-https lsb-release cron git \
+      libicu-dev procps > /dev/null 2>&1
+
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- \
+    --filename=composer \
+    --install-dir=/usr/bin \
+    --version=2.0.8 && \
+    chmod +x /usr/bin/composer
+
+RUN docker-php-ext-install -j$(nproc) intl > /dev/null 2>&1
+
+COPY ./docker/vhost.conf /etc/nginx/sites-enabled/default
+COPY ./docker/docker-entrypoint.sh /opt
+COPY ./docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+RUN chmod +x /opt/docker-entrypoint.sh
+
+# Volume
+VOLUME ["/app"]
+
+WORKDIR /app
+
+EXPOSE 80
+
+CMD ["php-fpm"]
