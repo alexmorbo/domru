@@ -76,7 +76,7 @@
                                                 <div class="col">
                                                     <h4>Видеопоток с камеры домофона</h4>
                                                     <div class="form-group">
-                                                        <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080{{ hassioIngress }}/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}">
+                                                        <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}">
                                                     </div>
                                                 </div>
                                             </div>
@@ -93,7 +93,7 @@
                                                                 <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ camera.ID }}" class="figure-img img-fluid rounded" alt="Камера">
                                                                 <figcaption class="figure-caption text-end">{{ camera.Name }}</figcaption>
                                                                 <div class="form-group">
-                                                                    <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080{{ hassioIngress }}/api/camera/stream/{{ account.address.accountId }}/{{ camera.ID }}">
+                                                                    <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ camera.ID }}">
                                                                 </div>
                                                             </figure>
                                                         </div>
@@ -127,7 +127,9 @@
                                                                     {% if event.eventTypeName in validEvents %}
                                                                     <div id="content_event_{{ event.id }}" class="collapse{% if i == 0 %} show{% endif %}" aria-labelledby="header_event_{{ event.id }}" data-parent="#events_{{ account.address.accountId }}">
                                                                         <div class="card-body">
-                                                                            <code>http://{{ hostIp }}:10080{{ hassioIngress }}/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}/{{ event.timestamp }}</code>
+                                                                            <div class="form-group">
+                                                                                <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}/{{ event.timestamp }}">
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                     {% endif %}
