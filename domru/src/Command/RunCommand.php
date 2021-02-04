@@ -252,6 +252,10 @@ class RunCommand extends Command
         $memory = memory_get_usage(true);
         $registry = $this->registry->all();
 
+        if (! isset($registry['accounts'][$account])) {
+            return resolve($this->error('Unknown account'));
+        }
+
         $promises = [];
         if ($this->request->query->get('events') && is_array($registry['accounts'])) {
             foreach ($registry['accounts'] as $accountId => &$accountData) {

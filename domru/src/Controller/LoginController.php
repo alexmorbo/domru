@@ -6,6 +6,7 @@ use App\Service\AccountService;
 use App\Service\Domru;
 use App\Traits\HttpClientAwareTrait;
 use Exception;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -120,6 +121,7 @@ class LoginController extends AbstractController
             $accountService->addAccount(
                 [
                     'id'      => $accountId,
+                    'uuid'    => mb_strtoupper(Uuid::uuid4()),
                     'phone'   => $accounts['phone'],
                     'address' => $accounts['accounts'][(int)$request->attributes->get('index')],
                     'data'    => $smsRequest,

@@ -49,15 +49,18 @@
                                             {% endif %}
                                         </table>
 
-                                        {% for place in account.subscriberPlaces %}
+                                        {% for placeCounter, place in account.subscriberPlaces %}
+                                            {% if placeCounter > 0 %}
+                                                <hr />
+                                            {% endif %}
                                             <div class="row text-center">
                                                 <div class="col">
                                                     <figure class="figure">
                                                         <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ place.cameraId }}" class="figure-img img-fluid rounded" alt="Камера">
-                                                        <figcaption class="figure-caption text-end">{{ place.place.accessControls[0].name }}</figcaption>
                                                     </figure>
                                                 </div>
                                                 <div class="col text-right">
+                                                    <h6>{{ place.place.accessControls[0].name }}</h6>
                                                     <div class="form-group">
                                                         <button class="btn btn-primary"
                                                                 onclick="openDoor(this, '{{ account.address.accountId }}', '{{ place.place.id }}', '{{ place.place.accessControls[0].id }}')">
@@ -69,6 +72,10 @@
                                                                 onclick="toggleEvents(this, '{{ account.address.accountId }}')">
                                                             Показать все события
                                                         </button>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <button class="btn btn-info"
+                                                                onclick="toggleHomeAssistant(this, '{{ place.place.id }}')">Показать интеграцию в Home Assistant</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -82,24 +89,24 @@
                                             </div>
 
                                             {% if account.cameras|length > 1 %}
-                                            <div class="row text-left mt-5">
-                                                <div class="col-12">
-                                                    <h4>Дополнительные камеры</h4>
-                                                </div>
-                                                {% for camera in account.cameras %}
-                                                    {% if camera.ID != place.cameraId %}
-                                                        <div class="col-6">
-                                                            <figure class="figure">
-                                                                <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ camera.ID }}" class="figure-img img-fluid rounded" alt="Камера">
-                                                                <figcaption class="figure-caption text-end">{{ camera.Name }}</figcaption>
-                                                                <div class="form-group">
-                                                                    <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ camera.ID }}">
-                                                                </div>
-                                                            </figure>
+                                                {% if place.additionalCameras %}
+                                                    <div class="row text-left mt-5">
+                                                        <div class="col-12">
+                                                            <h4>Дополнительные камеры</h4>
                                                         </div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </div>
+                                                        {% for cameraId in place.additionalCameras %}
+                                                            <div class="col-6">
+                                                                <figure class="figure">
+                                                                    <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ cameraId }}" class="figure-img img-fluid rounded" alt="Камера">
+                                                                    <figcaption class="figure-caption text-end">{{ account.cameras[cameraId].Name }}</figcaption>
+                                                                    <div class="form-group">
+                                                                        <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ cameraId }}">
+                                                                    </div>
+                                                                </figure>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
                                             {% endif %}
 
                                             {% if account.events %}
@@ -142,9 +149,9 @@
 
                                             <div class="row text-left mt-5">
                                                 <div class="col">
-                                                    <h4>Интеграция в Home Assistant</h4>
-                                                    <h5><code>configuration.yaml</code></h5>
-                                                    <pre>camera:
+                                                    <div class="d-none ha-integration" data-placeId="{{ place.place.id }}">
+                                                        <h5><code>configuration.yaml</code></h5>
+                                                        <pre>camera:
   - platform: generic
     name: domru_domofon_{{ place.cameraId }}
     still_image_url: http://{{ hostIp }}:10080/api/camera/snapshot/{{ account.address.accountId }}/{{ place.cameraId }}
@@ -180,10 +187,10 @@ script:
   domru_open_door_{{ account.address.accountId }}:
     sequence:
       - service: rest_command.domru_open_door_{{ account.address.accountId }}
-                                                    </pre>
+                                                        </pre>
 
-                                                    <h5><code>ui-lovelace.yaml</code></h5>
-                                                    <pre>- type: picture-glance
+                                                        <h5><code>ui-lovelace.yaml</code></h5>
+                                                        <pre>- type: picture-glance
   title: {{ place.place.accessControls[0].name }}
   entities:
     - entity: script.domru_open_door_{{ account.address.accountId }}
@@ -197,6 +204,7 @@ script:
   camera_image: camera.domru_domofon_{{ place.cameraId }}
 </pre>
 
+                                                    </div>
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -232,14 +240,27 @@ script:
 		}
 
 		function toggleEvents(self, accountId) {
-            var s = $(self);
-            if (s.text() != 'Показать все события') {
+            var s = $(self),
+                container = $('.hidden-events[data-accountId='+accountId+']');
+			if (container.hasClass('d-none')) {
                 s.text('Показать последние 5 событий');
             } else {
 	            s.text('Показать все события');
             }
 
-			$('.hidden-events[data-accountId='+accountId+']').toggleClass('d-none');
+			container.toggleClass('d-none');
+        }
+
+		function toggleHomeAssistant(self, placeId) {
+            var s = $(self),
+                container = $('.ha-integration[data-placeId='+placeId+']');
+            if (container.hasClass('d-none')) {
+                s.text('Скрыть интеграцию в Home Assistant');
+            } else {
+	            s.text('Показать интеграцию в Home Assistant');
+            }
+
+			container.toggleClass('d-none');
         }
     </script>
 {% endblock %}

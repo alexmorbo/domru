@@ -45,24 +45,46 @@ class AsyncRegistry
     {
         $data = $this->data;
         foreach ($data['accounts'] as $account => &$accountData) {
-            $cameras = $this->fetch('cameras', $account);
+            $cameras = [];
+            foreach ($this->fetch('cameras', $account) as $camera) {
+                $cameras[$camera['ID']] = $camera;
+            }
             $subscriberPlaces = $this->fetch('subscriberPlaces', $account);
 
             if ($subscriberPlaces) {
                 foreach ($subscriberPlaces as &$subscriberPlace) {
                     foreach ($subscriberPlace['place']['accessControls'] as $accessControl) {
-                        foreach ($cameras as $camera) {
+                        foreach ($cameras as &$camera) {
                             foreach ($camera['ParentGroups'] as $parentGroup) {
                                 if ($parentGroup['ID'] === (int)$accessControl['forpostGroupId']) {
                                     $subscriberPlace['cameraId'] = $camera['ID'];
+                                    $camera['isSubscriber'] = $subscriberPlace['id'];
                                 }
                             }
+
+                            if (!isset($camera['isSubscriber'])) {
+                                $subscriberPlace['additionalCameras'][] = $camera['ID'];
+                            }
                         }
+                    }
+                }
+
+                foreach ($subscriberPlaces as &$subscriberPlace) {
+                    $subscriberPlace['additionalCameras'] = false;
+                    foreach ($cameras as $camera) {
+                        if (!isset($camera['isSubscriber'])) {
+                            $subscriberPlace['additionalCameras'][] = $camera['ID'];
+                        }
+                    }
+
+                    if (is_array($subscriberPlace['additionalCameras'])) {
+                        $subscriberPlace['additionalCameras'] = array_unique($subscriberPlace['additionalCameras']);
                     }
                 }
             }
 
             $accountData['finances'] = $this->fetch('finances', $account);
+            $accountData['profiles'] = $this->fetch('profiles', $account);
             $accountData['cameras'] = $cameras;
             $accountData['subscriberPlaces'] = $subscriberPlaces;
         }

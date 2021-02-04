@@ -3,12 +3,9 @@
 namespace App\Service;
 
 use App\Traits\HttpClientAwareTrait;
-use Closure;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Ramsey\Uuid\Uuid;
-use React\EventLoop\LoopInterface;
 use React\Http\Browser;
 use React\Http\Message\ResponseException;
 use React\Promise\PromiseInterface;
@@ -29,7 +26,7 @@ class Domru
 
     private ?AsyncRegistry $registry = null;
 
-    private ?string $asyncUserAgent = null;
+    private ?string $asyncUserAgent = 'iPhone11,6 | iOS 14.3 | erth | 6.4.6 (build 3) | %s | 2 | %s';
 
     public const LOGIN_BY_PHONE = 'phone';
 
@@ -44,6 +41,8 @@ class Domru
     public const API_USER_AGENT = 'myHomeErth/8 CFNetwork/1209 Darwin/20.2.0';
 
     public const API_REFRESH_SESSION = 'https://myhome.novotelecom.ru/auth/v2/session/refresh';
+
+    public const API_PROFILES = 'https://myhome.novotelecom.ru/rest/v1/subscribers/profiles';
 
     public const API_FINANCES = 'https://myhome.novotelecom.ru/rest/v1/subscribers/profiles/finances';
 
@@ -62,6 +61,8 @@ class Domru
     public const REFRESH_ACCESS_TOKEN_INTERVAL = 60;
 
     public const REFRESH_FINANCES_INTERVAL = 3600;
+
+    public const REFRESH_PROFILES_INTERVAL = 3600;
 
     public const REFRESH_SUBSCRIBER_PLACES_INTERVAL = 3600;
 
@@ -216,14 +217,6 @@ class Domru
         $this->client = new Browser($this->registry->loop);
 
         /**
-         * Generate user agent
-         */
-        $this->asyncUserAgent = sprintf(
-            'iPhone11,6 | iOS 14.3 | erth | 6.4.6 (build 3) | 780029983483 | 2 | %s',
-            mb_strtoupper(Uuid::uuid4())
-        );
-
-        /**
          * Accounts cache
          */
         $this->registry->loop->addPeriodicTimer(
@@ -243,6 +236,7 @@ class Domru
                                 foreach ($newAcounts as $account) {
                                     $promises[] = $this->fetchData(self::API_SUBSCRIBER_PLACES, 'subscriberPlaces', $account);
                                     $promises[] = $this->fetchData(self::API_FINANCES, 'finances', $account);
+                                    $promises[] = $this->fetchData(self::API_PROFILES, 'profiles', $account);
                                     $promises[] = $this->fetchData(self::API_CAMERAS, 'cameras', $account);
                                 }
 
@@ -284,6 +278,15 @@ class Domru
                     );
                 }
             ),
+            $this->fetchData(self::API_PROFILES, 'profiles')->then(
+                function () {
+                    $this->logger->debug('Watchdog for profiles complete');
+                    $this->registry->loop->addPeriodicTimer(
+                        self::REFRESH_PROFILES_INTERVAL,
+                        fn() => $this->fetchData(self::API_PROFILES, 'profiles')
+                    );
+                }
+            ),
             $this->fetchData(self::API_CAMERAS, 'cameras')->then(
                 function () {
                     $this->logger->debug('Watchdog for cameras complete');
@@ -315,7 +318,7 @@ class Domru
             $promises[$account] = $this->client->get(
                 self::API_REFRESH_SESSION,
                 [
-                    'User-Agent' => $this->asyncUserAgent,
+                    'User-Agent' => sprintf($this->asyncUserAgent, $account, $accountData['uuid']),
                     'Operator'   => $accountData['data']['operatorId'],
                     'Bearer'     => $accountData['data']['refreshToken'],
                 ]
@@ -369,29 +372,13 @@ class Domru
                 $apiUrl,
                 [
                     'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
-                    'User-Agent'    => $this->asyncUserAgent,
+                    'User-Agent'    => sprintf($this->asyncUserAgent, $account, $this->registry->accounts[$account]['uuid']),
                     'Authorization' => 'Bearer '.$token,
                 ]
             )->then(
                 function (ResponseInterface $response) use ($account, $storageKey, $apiUrl) {
                     $data = json_decode($response->getBody()->getContents(), true);
                     $this->logger->debug('['.$account.'] Fetching success: '.$storageKey);
-
-//                    if ($apiUrl === self::API_SUBSCRIBER_PLACES && !($events = $this->registry->fetch('events', $account))) {
-//                        return $this->fetchData(self::API_EVENTS, 'events')->then(
-//                            function () use ($data) {
-//                                $this->logger->debug('Watchdog for events complete');
-//                                $this->registry->loop->addPeriodicTimer(
-//                                    self::REFRESH_EVENTS_INTERVAL,
-//                                    fn() => $this->fetchData(self::API_EVENTS, 'events')
-//                                );
-//
-//                                return resolve($data);
-//                            }
-//                        ),
-//                    } else {
-//                        return resolve($data);
-//                    }
 
                     return resolve($data);
                 },
@@ -483,8 +470,8 @@ class Domru
 
         return resolve(
             [
-                'placeId'         => $placeId,
-                'place'           => $place,
+                'placeId' => $placeId,
+                'place'   => $place,
             ]
         );
     }
@@ -512,7 +499,11 @@ class Domru
                         [
                             'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
                             'Content-Type'  => 'application/json',
-                            'User-Agent'    => $this->asyncUserAgent,
+                            'User-Agent'    => sprintf(
+                                $this->asyncUserAgent,
+                                $account,
+                                $this->registry->accounts[$account]['uuid']
+                            ),
                             'Authorization' => 'Bearer '.$this->registry->getToken($account),
                         ],
                         json_encode(['name' => 'accessControlOpen'])
@@ -574,7 +565,7 @@ class Domru
             [
                 'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
                 'Content-Type'  => 'application/json',
-                'User-Agent'    => $this->asyncUserAgent,
+                'User-Agent'    => sprintf($this->asyncUserAgent, $account, $this->registry->accounts[$account]['uuid']),
                 'Authorization' => 'Bearer '.$this->registry->getToken($account),
             ]
         )->then(
@@ -645,7 +636,7 @@ class Domru
             $url.http_build_query($httpQuery),
             [
                 'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
-                'User-Agent'    => $this->asyncUserAgent,
+                'User-Agent'    => sprintf($this->asyncUserAgent, $account, $this->registry->accounts[$account]['uuid']),
                 'Authorization' => 'Bearer '.$this->registry->getToken($account),
             ]
         )->then(
@@ -672,8 +663,6 @@ class Domru
         );
     }
 
-
-
     public function events(string $account, int $placeId = null, int $limit = null): PromiseInterface
     {
         if ($this->registry->state !== AsyncRegistry::STATE_LOOP) {
@@ -693,7 +682,7 @@ class Domru
                         [
                             'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
                             'Content-Type'  => 'application/json',
-                            'User-Agent'    => $this->asyncUserAgent,
+                            'User-Agent'    => sprintf($this->asyncUserAgent, $account, $this->registry->accounts[$account]['uuid']),
                             'Authorization' => 'Bearer '.$this->registry->getToken($account),
                         ]
                     )->then(

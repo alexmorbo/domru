@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Traits\HttpClientAwareTrait;
+use Ramsey\Uuid\Uuid;
 
 class AccountService
 {
@@ -46,7 +47,11 @@ class AccountService
             }
 
             $data = explode('|', $row, 2);
-            $accounts[$data[0]] = json_decode($data[1], true);
+            $accountData = json_decode($data[1], true);
+            if (! isset($accountData['uuid'])) {
+                $accountData['uuid'] = mb_strtoupper(Uuid::uuid4()->toString());
+            }
+            $accounts[$data[0]] = $accountData;
         }
 
         return $accounts;
