@@ -226,6 +226,15 @@ script:
     </div>
 
     <script>
+	    $(document).ready(function () {
+            $('.figure-img').each(function (i, el) {
+	    	    setInterval(function() {
+                    $(el).attr("src", $(el).attr('src'));
+		        }, 1000 + Math.random() * 1000);
+            });
+	    });
+
+
 		function openDoor(self, accountId, placeId, accessControlId) {
 			$.ajax({
                 url: '{{ hassioIngress }}/api/open/' + accountId + '/' + placeId + '/' + accessControlId,
