@@ -26,37 +26,37 @@ class Domru
 
     private ?AsyncRegistry $registry = null;
 
-    private ?string $asyncUserAgent = 'iPhone11,6 | iOS 14.3 | erth | 6.4.6 (build 3) | %s | 2 | %s';
+    private ?string $asyncUserAgent = 'iPhone13,3 | iOS 14.4.2 | erth | 6.6.2 (build 2) | %s | 2 | %s';
 
     public const LOGIN_BY_PHONE = 'phone';
 
     public const LOGIN_BY_ACCOUNT = 'account';
 
-    public const API_AUTH_LOGIN = 'https://myhome.novotelecom.ru/auth/v2/login/%s';
+    public const API_AUTH_LOGIN = 'https://api-mh.ertelecom.ru/auth/v2/login/%s';
 
-    public const API_AUTH_CONFIRMATION = 'https://myhome.novotelecom.ru/auth/v2/confirmation/%s';
+    public const API_AUTH_CONFIRMATION = 'https://api-mh.ertelecom.ru/auth/v2/confirmation/%s';
 
-    public const API_AUTH_CONFIRMATION_SMS = 'https://myhome.novotelecom.ru/auth/v2/auth/%s/confirmation';
+    public const API_AUTH_CONFIRMATION_SMS = 'https://api-mh.ertelecom.ru/auth/v2/auth/%s/confirmation';
 
     public const API_USER_AGENT = 'myHomeErth/8 CFNetwork/1209 Darwin/20.2.0';
 
-    public const API_REFRESH_SESSION = 'https://myhome.novotelecom.ru/auth/v2/session/refresh';
+    public const API_REFRESH_SESSION = 'https://api-mh.ertelecom.ru/auth/v2/session/refresh';
 
-    public const API_PROFILES = 'https://myhome.novotelecom.ru/rest/v1/subscribers/profiles';
+    public const API_PROFILES = 'https://api-mh.ertelecom.ru/rest/v1/subscribers/profiles';
 
-    public const API_FINANCES = 'https://myhome.novotelecom.ru/rest/v1/subscribers/profiles/finances';
+    public const API_FINANCES = 'https://api-mh.ertelecom.ru/rest/v1/subscribers/profiles/finances';
 
-    public const API_CAMERAS = 'https://myhome.novotelecom.ru/rest/v1/forpost/cameras';
+    public const API_CAMERAS = 'https://api-mh.ertelecom.ru/rest/v1/forpost/cameras';
 
-    public const API_SUBSCRIBER_PLACES = 'https://myhome.novotelecom.ru/rest/v1/subscriberplaces';
+    public const API_SUBSCRIBER_PLACES = 'https://api-mh.ertelecom.ru/rest/v1/subscriberplaces';
 
-    public const API_OPEN_DOOR = 'https://myhome.novotelecom.ru/rest/v1/places/%d/accesscontrols/%d/actions';
+    public const API_OPEN_DOOR = 'https://api-mh.ertelecom.ru/rest/v1/places/%d/accesscontrols/%d/actions';
 
-    public const API_CAMERA_GET_STREAM = 'https://myhome.novotelecom.ru/rest/v1/forpost/cameras/%d/video?';
+    public const API_CAMERA_GET_STREAM = 'https://api-mh.ertelecom.ru/rest/v1/forpost/cameras/%d/video?';
 
-    public const API_CAMERA_GET_SNAPSHOT = 'https://myhome.novotelecom.ru/rest/v1/forpost/cameras/%d/snapshots?';
+    public const API_CAMERA_GET_SNAPSHOT = 'https://api-mh.ertelecom.ru/rest/v1/forpost/cameras/%d/snapshots?';
 
-    public const API_EVENTS = 'https://myhome.novotelecom.ru/rest/v1/places/%d/events?allowExtentedActions=true';
+    public const API_EVENTS = 'https://api-mh.ertelecom.ru/rest/v1/places/%d/events?allowExtentedActions=true';
 
     public const REFRESH_ACCESS_TOKEN_INTERVAL = 60;
 
@@ -571,7 +571,7 @@ class Domru
         )->then(
             function (ResponseInterface $response) use ($account) {
                 if ($response->getHeader('Content-Type')[0] !== 'image/jpeg') {
-                    return reject('Api error: [HTTP OK] Response image failed');
+                    $this->logger->warning('Bad response headers from Domru');
                 }
 
                 $this->logger->debug('Snapshot success');

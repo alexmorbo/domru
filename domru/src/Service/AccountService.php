@@ -29,6 +29,7 @@ class AccountService
 
         if (! file_exists($this->path)) {
             file_put_contents($this->path, '');
+            chmod($this->path, 0777);
         }
     }
 
@@ -70,6 +71,24 @@ class AccountService
         }
 
         return file_put_contents($this->path, implode("\n", $data)) ? true : false;
+    }
+
+    public function removeAccount($accountId): bool
+    {
+        $accounts = $this->getAccounts();
+
+        foreach ($accounts as $id => $account) {
+            if ($id === $accountId) {
+                unset($accounts[$id]);
+            }
+        }
+
+        $data = [];
+        foreach ($accounts as $key => $account) {
+            $data[] = $key.'|'.json_encode($account, JSON_UNESCAPED_UNICODE);
+        }
+
+        return file_put_contents($this->path, implode("\n", $data)."\n") ? true : false;
     }
 
     public function fetchApi()

@@ -77,6 +77,14 @@
                                                         <button class="btn btn-info"
                                                                 onclick="toggleHomeAssistant(this, '{{ place.place.id }}')">Показать интеграцию в Home Assistant</button>
                                                     </div>
+                                                    <div class="form-group">
+                                                        <form class="remove-account" action="{{ hassioIngress }}{{ path('remove_account') }}" method="post">
+                                                            <input type="hidden" name="accountId" value="{{ account.address.accountId }}">
+                                                            <button class="btn btn-sm btn-link">
+                                                                Удалить учетную запись
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="row text-left">
@@ -231,6 +239,14 @@ script:
 	    	    setInterval(function() {
                     $(el).attr("src", $(el).attr('src'));
 		        }, 1000 + Math.random() * 1000);
+            });
+
+            $('.remove-account').on('submit', function(e) {
+            	e.preventDefault();
+	            if (confirm('Вы действительно хотите удалить учетку запись?')) {
+	            	$(e.target).find('button').text('Удаляем').attr('disabled', 'true');
+	            	e.target.submit();
+	            }
             });
 	    });
 
