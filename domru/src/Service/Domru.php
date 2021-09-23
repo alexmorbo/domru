@@ -26,7 +26,7 @@ class Domru
 
     private ?AsyncRegistry $registry = null;
 
-    private ?string $asyncUserAgent = 'iPhone13,3 | iOS 14.4.2 | erth | 6.6.2 (build 2) | %s | 2 | %s';
+    private ?string $asyncUserAgent = 'iPhone13,3 | iOS 14.7.1 | erth | 6.9.3 (build 3) | _ | %s | %s';
 
     public const LOGIN_BY_PHONE = 'phone';
 
@@ -38,7 +38,7 @@ class Domru
 
     public const API_AUTH_CONFIRMATION_SMS = 'https://api-mh.ertelecom.ru/auth/v2/auth/%s/confirmation';
 
-    public const API_USER_AGENT = 'myHomeErth/8 CFNetwork/1209 Darwin/20.2.0';
+    public const API_USER_AGENT = 'myHomeErth/3 CFNetwork/1240.0.4 Darwin/20.6.0';
 
     public const API_REFRESH_SESSION = 'https://api-mh.ertelecom.ru/auth/v2/session/refresh';
 
@@ -81,7 +81,7 @@ class Domru
     private function apiError(string $account, \Exception $e)
     {
         try {
-            $error = '['.$account.'] Api error: ['.$e->getMessage().'] '.$e->getResponse()->getBody()->getContents();
+            $error = '['.$account.'] Api error: ['.$e->getMessage().'] Contents: '.$e->getResponse()->getBody()->getContents();
             $this->logger->error($error);
 
             return reject($error);
@@ -137,7 +137,6 @@ class Domru
         $headers = [
             'Host'            => parse_url(self::API_AUTH_CONFIRMATION, PHP_URL_HOST),
             'Content-Type'    => 'application/json',
-            //            'Cookie'          => $accounts['cookie'],
             'User-Agent'      => self::API_USER_AGENT,
             'Connection'      => 'keep-alive',
             'Accept'          => '*/*',
@@ -177,7 +176,6 @@ class Domru
         $headers = [
             'Host'            => parse_url(self::API_AUTH_CONFIRMATION_SMS, PHP_URL_HOST),
             'Content-Type'    => 'application/json',
-            //            'Cookie'          => $accounts['cookie'],
             'User-Agent'      => self::API_USER_AGENT,
             'Connection'      => 'keep-alive',
             'Accept'          => '*/*',
@@ -318,7 +316,7 @@ class Domru
             $promises[$account] = $this->client->get(
                 self::API_REFRESH_SESSION,
                 [
-                    'User-Agent' => sprintf($this->asyncUserAgent, $account, $accountData['uuid']),
+                    'User-Agent' => sprintf($this->asyncUserAgent, $accountData['data']['operatorId'], $accountData['uuid']),
                     'Operator'   => $accountData['data']['operatorId'],
                     'Bearer'     => $accountData['data']['refreshToken'],
                 ]
@@ -372,7 +370,11 @@ class Domru
                 $apiUrl,
                 [
                     'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
-                    'User-Agent'    => sprintf($this->asyncUserAgent, $account, $this->registry->accounts[$account]['uuid']),
+                    'User-Agent'    => sprintf(
+                        $this->asyncUserAgent,
+                        $this->registry->accounts['data']['operatorId'],
+                        $this->registry->accounts[$account]['uuid']
+                    ),
                     'Authorization' => 'Bearer '.$token,
                 ]
             )->then(
@@ -501,7 +503,7 @@ class Domru
                             'Content-Type'  => 'application/json',
                             'User-Agent'    => sprintf(
                                 $this->asyncUserAgent,
-                                $account,
+                                $this->registry->accounts['data']['operatorId'],
                                 $this->registry->accounts[$account]['uuid']
                             ),
                             'Authorization' => 'Bearer '.$this->registry->getToken($account),
@@ -565,7 +567,11 @@ class Domru
             [
                 'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
                 'Content-Type'  => 'application/json',
-                'User-Agent'    => sprintf($this->asyncUserAgent, $account, $this->registry->accounts[$account]['uuid']),
+                'User-Agent'    => sprintf(
+                    $this->asyncUserAgent,
+                    $this->registry->accounts['data']['operatorId'],
+                    $this->registry->accounts[$account]['uuid']
+                ),
                 'Authorization' => 'Bearer '.$this->registry->getToken($account),
             ]
         )->then(
@@ -636,7 +642,11 @@ class Domru
             $url.http_build_query($httpQuery),
             [
                 'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
-                'User-Agent'    => sprintf($this->asyncUserAgent, $account, $this->registry->accounts[$account]['uuid']),
+                'User-Agent'    => sprintf(
+                    $this->asyncUserAgent,
+                    $this->registry->accounts['data']['operatorId'],
+                    $this->registry->accounts[$account]['uuid']
+                ),
                 'Authorization' => 'Bearer '.$this->registry->getToken($account),
             ]
         )->then(
@@ -682,7 +692,11 @@ class Domru
                         [
                             'Operator'      => $this->registry->accounts[$account]['data']['operatorId'],
                             'Content-Type'  => 'application/json',
-                            'User-Agent'    => sprintf($this->asyncUserAgent, $account, $this->registry->accounts[$account]['uuid']),
+                            'User-Agent'    => sprintf(
+                                $this->asyncUserAgent,
+                                $this->registry->accounts['data']['operatorId'],
+                                $this->registry->accounts[$account]['uuid']
+                            ),
                             'Authorization' => 'Bearer '.$this->registry->getToken($account),
                         ]
                     )->then(
