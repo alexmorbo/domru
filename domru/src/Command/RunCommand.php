@@ -140,13 +140,12 @@ class RunCommand extends Command
                 ],
             ],
             'openDoor'       => [
-                'path' => '/api/open/{account}/{placeId}/{accessControlId}',
+                'path' => '/api/open/{account}/{cameraId}',
                 'data' => [
                     '_controller'     => self::class,
                     '_method'         => 'openDoor',
                     'account'         => null,
-                    'placeId'         => null,
-                    'accessControlId' => null,
+                    'cameraId'        => null
                 ],
             ],
             'cameraSnapshot' => [
@@ -226,6 +225,19 @@ class RunCommand extends Command
                 $promises[$accountId.'_events'] = $this->domru->events($accountId)
                     ->then(
                         function ($events) use (&$accountData) {
+                            foreach ($events as &$event) {
+                                if ($event['source']['type'] === 'accessControl') {
+                                    foreach($accountData['subscriberPlaces'] as $subscriberPlace) {
+                                        if ($subscriberPlace['place']['id'] === $event['placeId']) {
+                                            foreach ($subscriberPlace['place']['accessControls'] as $accessControl) {
+                                                if ($accessControl['id'] === $event['source']['id']) {
+                                                    $event['cameraId'] = $accessControl['cameraId'];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             $accountData['events'] = $events;
                         }
                     );
@@ -283,9 +295,9 @@ class RunCommand extends Command
         );
     }
 
-    private function openDoor(string $account, int $placeId = null, int $accessControlId = null): PromiseInterface
+    private function openDoor(string $account, int $cameraId = null): PromiseInterface
     {
-        return $this->domru->openDoor($account, $placeId, $accessControlId)->then(
+        return $this->domru->openDoor($account, $cameraId)->then(
             function ($data) {
                 return $this->json($data);
             },

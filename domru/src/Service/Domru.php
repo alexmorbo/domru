@@ -407,31 +407,29 @@ class Domru
         );
     }
 
-    private function getPlaceIdAccessControlId(string $account, int $placeId = null, int $accessControlId = null): PromiseInterface
+    private function getPlaceIdAccessControlId(string $account, int $cameraId): PromiseInterface
     {
-        $subscriberPlaces = $this->registry->fetch('subscriberPlaces', $account);
+        $all = $this->registry->all();
+        $accountData = $all['accounts'][$account];
+        $subscriberPlaces = $accountData['subscriberPlaces'] ?? null;
         if (!is_array($subscriberPlaces)) {
             return reject('Subscriber places is empty');
         }
 
-        $place = null;
+        $useAccessControl = $placeId = $accessControlId = null;
 
         foreach ($subscriberPlaces as $subscriberPlace) {
-            if ($placeId === null) {
-                $placeId = $subscriberPlace['place']['id'];
-                $accessControlId = $subscriberPlace['place']['accessControls'][0]['id'];
-                $place = $subscriberPlace['place'];
-                break;
-            } else {
-                if ($placeId === $subscriberPlace['place']['id']) {
-                    $accessControlId = $subscriberPlace['place']['accessControls'][0]['id'];
-                    $place = $subscriberPlace['place'];
-                    break;
+            foreach ($subscriberPlace['place']['accessControls'] as $accessControl) {
+                if (isset($accessControl['cameraId']) && $accessControl['cameraId'] === $cameraId) {
+                    $placeId = $subscriberPlace['place']['id'];
+                    $accessControlId = $accessControl['id'];
+                    $useAccessControl = $subscriberPlace['place'];
+                    break 2;
                 }
             }
         }
 
-        if (!$placeId || !$accessControlId || !$place) {
+        if (!$placeId || !$accessControlId || !$useAccessControl) {
             return reject('Wrong parameters');
         }
 
@@ -439,7 +437,7 @@ class Domru
             [
                 'placeId'         => $placeId,
                 'accessControlId' => $accessControlId,
-                'place'           => $place,
+                'accessControl'   => $useAccessControl,
             ]
         );
     }
@@ -478,16 +476,16 @@ class Domru
         );
     }
 
-    public function openDoor(string $account, int $placeId = null, int $accessControlId = null): PromiseInterface
+    public function openDoor(string $account, int $cameraId): PromiseInterface
     {
         if ($this->registry->state !== AsyncRegistry::STATE_LOOP) {
             return reject('Api not ready');
         }
 
-        return $this->getPlaceIdAccessControlId($account, $placeId, $accessControlId)
+        return $this->getPlaceIdAccessControlId($account, $cameraId)
             ->then(
                 function ($use) use ($account) {
-                    if ($use['place']['accessControls'][0]['allowOpen'] === false) {
+                    if ($use['accessControl']['allowOpen'] === false) {
                         return reject('Access control allowOpen disabled');
                     }
 

@@ -53,68 +53,69 @@
                                             {% if placeCounter > 0 %}
                                                 <hr />
                                             {% endif %}
-                                            <div class="row text-center">
-                                                <div class="col">
-                                                    <figure class="figure">
-                                                        <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ place.cameraId }}" class="figure-img img-fluid rounded" alt="Камера">
-                                                    </figure>
-                                                </div>
-                                                <div class="col text-right">
-                                                    <h6>{{ place.place.accessControls[0].name }}</h6>
-                                                    <div class="form-group">
-                                                        <button class="btn btn-primary"
-                                                                onclick="openDoor(this, '{{ account.address.accountId }}', '{{ place.place.id }}', '{{ place.place.accessControls[0].id }}')">
-                                                            Открыть дверь
-                                                        </button>
+                                            {% for accessControl in place.place.accessControls %}
+                                                <div class="row text-center">
+                                                    <div class="col-8">
+                                                        <figure class="figure">
+                                                            <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ accessControl.cameraId }}" class="figure-img img-fluid rounded" alt="Камера">
+                                                        </figure>
                                                     </div>
-                                                    <div class="form-group">
-                                                        <button class="btn btn-primary"
-                                                                onclick="toggleEvents(this, '{{ account.address.accountId }}')">
-                                                            Показать все события
-                                                        </button>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <button class="btn btn-info"
-                                                                onclick="toggleHomeAssistant(this, '{{ place.place.id }}')">Показать интеграцию в Home Assistant</button>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <form class="remove-account" action="{{ hassioIngress }}{{ path('remove_account') }}" method="post">
-                                                            <input type="hidden" name="accountId" value="{{ account.address.accountId }}">
-                                                            <button class="btn btn-sm btn-link">
-                                                                Удалить учетную запись
+                                                    <div class="col-4 text-right">
+                                                        <h6>{{ accessControl.name }}</h6>
+                                                        <div class="form-group">
+                                                            <button class="btn btn-primary"
+                                                                    onclick="openDoor(this, '{{ account.address.accountId }}', '{{ accessControl.cameraId }}')">
+                                                                Открыть дверь
                                                             </button>
-                                                        </form>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="row text-left">
-                                                <div class="col">
-                                                    <h4>Видеопоток с камеры домофона</h4>
-                                                    <div class="form-group">
-                                                        <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}">
+                                                <div class="row text-left">
+                                                    <div class="col">
+                                                        <h4>Видеопоток с камеры домофона</h4>
+                                                        <div class="form-group">
+                                                            <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ accessControl.cameraId }}">
+                                                        </div>
                                                     </div>
+                                                </div>
+                                            {% endfor %}
+
+                                            <div class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-primary"
+                                                            onclick="toggleEvents(this, '{{ account.address.accountId }}')">
+                                                        Показать все события
+                                                    </button>
+                                                    <button class="btn btn-sm btn-info"
+                                                            onclick="toggleHomeAssistant(this, '{{ place.place.id }}')">
+                                                        Показать интеграцию в Home Assistant
+                                                    </button>
+                                                    <form class="remove-account" action="{{ hassioIngress }}{{ path('remove_account') }}" method="post">
+                                                        <input type="hidden" name="accountId" value="{{ account.address.accountId }}">
+                                                        <button class="btn btn-sm btn-danger">
+                                                            Удалить учетную запись
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </div>
 
-                                            {% if account.cameras|length > 1 %}
-                                                {% if place.additionalCameras %}
-                                                    <div class="row text-left mt-5">
-                                                        <div class="col-12">
-                                                            <h4>Дополнительные камеры</h4>
-                                                        </div>
-                                                        {% for cameraId in place.additionalCameras %}
-                                                            <div class="col-6">
-                                                                <figure class="figure">
-                                                                    <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ cameraId }}" class="figure-img img-fluid rounded" alt="Камера">
-                                                                    <figcaption class="figure-caption text-end">{{ account.cameras[cameraId].Name }}</figcaption>
-                                                                    <div class="form-group">
-                                                                        <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ cameraId }}">
-                                                                    </div>
-                                                                </figure>
-                                                            </div>
-                                                        {% endfor %}
+                                            {% if place.additionalCameras and account.cameras|length > 1 %}
+                                                <div class="row text-left mt-5">
+                                                    <div class="col-12">
+                                                        <h4>Дополнительные камеры</h4>
                                                     </div>
-                                                {% endif %}
+                                                    {% for cameraId in place.additionalCameras %}
+                                                        <div class="col-6">
+                                                            <figure class="figure">
+                                                                <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ cameraId }}" class="figure-img img-fluid rounded" alt="Камера">
+                                                                <figcaption class="figure-caption text-end">{{ account.cameras[cameraId].Name }}</figcaption>
+                                                                <div class="form-group">
+                                                                    <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ cameraId }}">
+                                                                </div>
+                                                            </figure>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
                                             {% endif %}
 
                                             {% if account.events %}
@@ -143,7 +144,7 @@
                                                                     <div id="content_event_{{ event.id }}" class="collapse{% if i == 0 %} show{% endif %}" aria-labelledby="header_event_{{ event.id }}" data-parent="#events_{{ account.address.accountId }}">
                                                                         <div class="card-body">
                                                                             <div class="form-group">
-                                                                                <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}/{{ event.timestamp }}">
+                                                                                <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ event.cameraId }}/{{ event.timestamp }}">
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -159,12 +160,14 @@
                                                 <div class="col">
                                                     <div class="d-none ha-integration" data-placeId="{{ place.place.id }}">
                                                         <h5><code>configuration.yaml</code></h5>
-                                                        <pre>camera:
+                                                        <pre>camera:{% for accessControl in place.place.accessControls %}
+
   - platform: generic
-    name: domru_domofon_{{ place.cameraId }}
-    still_image_url: http://{{ hostIp }}:10080/api/camera/snapshot/{{ account.address.accountId }}/{{ place.cameraId }}
-    stream_source: http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ place.cameraId }}
-{% if account.cameras|length > 1 %}
+    name: domru_domofon_{{ accessControl.cameraId }}
+    still_image_url: http://{{ hostIp }}:10080/api/camera/snapshot/{{ account.address.accountId }}/{{ accessControl.cameraId }}
+    stream_source: http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ accessControl.cameraId }}
+                                            {% endfor %}
+{% if place.additionalCameras and account.cameras|length > 1 %}
     {% for camera in account.cameras %}
         {% if camera.ID != place.cameraId %}
 
@@ -188,28 +191,35 @@ sensors:
 {% endif %}
 
 rest_command:
-  domru_open_door_{{ account.address.accountId }}:
-    url: http://{{ hostIp }}:10080/api/open/{{ account.address.accountId }}/{{ place.place.id }}/{{ place.place.accessControls[0].id }}
+{% for accessControl in place.place.accessControls %}
+  domru_open_door_{{ accessControl.cameraId }}:
+    url: http://{{ hostIp }}:10080/api/open/{{ account.address.accountId }}/{{ accessControl.cameraId }}
 
+{% endfor %}
 script:
-  domru_open_door_{{ account.address.accountId }}:
+{% for accessControl in place.place.accessControls %}
+  domru_open_door_{{ accessControl.cameraId }}:
     sequence:
-      - service: rest_command.domru_open_door_{{ account.address.accountId }}
+      - service: rest_command.domru_open_door_{{ accessControl.cameraId }}
+{% endfor %}
                                                         </pre>
 
                                                         <h5><code>ui-lovelace.yaml</code></h5>
-                                                        <pre>- type: picture-glance
-  title: {{ place.place.accessControls[0].name }}
+                                                        <pre>{% for accessControl in place.place.accessControls %}
+- type: picture-glance
+  title: "{{ accessControl.name }}"
   entities:
-    - entity: script.domru_open_door_{{ account.address.accountId }}
+    - entity: script.domru_open_door_{{ accessControl.cameraId }}
       icon: "mdi:door-open"
-      name: Открыть дверь
+      name: "Открыть дверь"
       tap_action:
         action: toggle
   hold_action:
       action: call-service
-      service: rest_command.domru_open_door_{{ account.address.accountId }}
-  camera_image: camera.domru_domofon_{{ place.cameraId }}
+      service: rest_command.domru_open_door_{{ accessControl.cameraId }}
+  camera_image: camera.domru_domofon_{{ accessControl.cameraId }}
+
+{% endfor %}
 </pre>
 
                                                     </div>
@@ -251,9 +261,9 @@ script:
 	    });
 
 
-		function openDoor(self, accountId, placeId, accessControlId) {
+		function openDoor(self, accountId, cameraId) {
 			$.ajax({
-                url: '{{ hassioIngress }}/api/open/' + accountId + '/' + placeId + '/' + accessControlId,
+                url: '{{ hassioIngress }}/api/open/' + accountId + '/' + cameraId,
                 method: 'get',
                 beforeSend: function() {
 	                $(self).removeClass('btn-primary').addClass('btn-secondary').text('Открываем')

@@ -53,17 +53,17 @@ class AsyncRegistry
 
             if ($subscriberPlaces) {
                 foreach ($subscriberPlaces as &$subscriberPlace) {
-                    foreach ($subscriberPlace['place']['accessControls'] as $accessControl) {
-                        foreach ($cameras as &$camera) {
-                            foreach ($camera['ParentGroups'] as $parentGroup) {
+                    foreach ($subscriberPlace['place']['accessControls'] as &$accessControl) {
+                        foreach ($cameras as &$cameraToWork) {
+                            foreach ($cameraToWork['ParentGroups'] as $parentGroup) {
                                 if ($parentGroup['ID'] === (int)$accessControl['forpostGroupId']) {
-                                    $subscriberPlace['cameraId'] = $camera['ID'];
-                                    $camera['isSubscriber'] = $subscriberPlace['id'];
+                                    $accessControl['cameraId'] = $cameraToWork['ID'];
+                                    $cameraToWork['isSubscriber'] = $accessControl['id'];
                                 }
                             }
 
-                            if (!isset($camera['isSubscriber'])) {
-                                $subscriberPlace['additionalCameras'][] = $camera['ID'];
+                            if (!isset($cameraToWork['isSubscriber'])) {
+                                $subscriberPlace['additionalCameras'][] = $cameraToWork['ID'];
                             }
                         }
                     }
