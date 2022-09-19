@@ -74,7 +74,7 @@
                                                     <div class="col">
                                                         <h4>Видеопоток с камеры домофона</h4>
                                                         <div class="form-group">
-                                                            <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ accessControl.cameraId }}">
+                                                            <input type="text" class="form-control" readonly value="http://{{ hostIp }}:20880/api/camera/stream/{{ account.address.accountId }}/{{ accessControl.cameraId }}">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -110,7 +110,7 @@
                                                                 <img src="{{ hassioIngress }}/api/camera/snapshot/{{ account.address.accountId }}/{{ cameraId }}" class="figure-img img-fluid rounded" alt="Камера">
                                                                 <figcaption class="figure-caption text-end">{{ account.cameras[cameraId].Name }}</figcaption>
                                                                 <div class="form-group">
-                                                                    <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ cameraId }}">
+                                                                    <input type="text" class="form-control" readonly value="http://{{ hostIp }}:20880/api/camera/stream/{{ account.address.accountId }}/{{ cameraId }}">
                                                                 </div>
                                                             </figure>
                                                         </div>
@@ -144,7 +144,7 @@
                                                                     <div id="content_event_{{ event.id }}" class="collapse{% if i == 0 %} show{% endif %}" aria-labelledby="header_event_{{ event.id }}" data-parent="#events_{{ account.address.accountId }}">
                                                                         <div class="card-body">
                                                                             <div class="form-group">
-                                                                                <input type="text" class="form-control" readonly value="http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ event.cameraId }}/{{ event.timestamp }}">
+                                                                                <input type="text" class="form-control" readonly value="http://{{ hostIp }}:20880/api/camera/stream/{{ account.address.accountId }}/{{ event.cameraId }}/{{ event.timestamp }}">
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -164,8 +164,8 @@
 
   - platform: generic
     name: domru_domofon_{{ accessControl.cameraId }}
-    still_image_url: http://{{ hostIp }}:10080/api/camera/snapshot/{{ account.address.accountId }}/{{ accessControl.cameraId }}
-    stream_source: http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ accessControl.cameraId }}
+    still_image_url: http://{{ hostIp }}:20880/api/camera/snapshot/{{ account.address.accountId }}/{{ accessControl.cameraId }}
+    stream_source: http://{{ hostIp }}:20880/api/camera/stream/{{ account.address.accountId }}/{{ accessControl.cameraId }}
                                             {% endfor %}
 {% if place.additionalCameras and account.cameras|length > 1 %}
     {% for camera in account.cameras %}
@@ -173,8 +173,8 @@
 
   - platform: generic
     name: domru_domofon_{{ camera.ID }}
-    still_image_url: http://{{ hostIp }}:10080/api/camera/snapshot/{{ account.address.accountId }}/{{ camera.ID }}
-    stream_source: http://{{ hostIp }}:10080/api/camera/stream/{{ account.address.accountId }}/{{ camera.ID }}
+    still_image_url: http://{{ hostIp }}:20880/api/camera/snapshot/{{ account.address.accountId }}/{{ camera.ID }}
+    stream_source: http://{{ hostIp }}:20880/api/camera/stream/{{ account.address.accountId }}/{{ camera.ID }}
         {% endif %}
     {% endfor %}
 {% endif %}
@@ -183,7 +183,7 @@
 sensors:
   - platform: rest
     name: domru_domofon_finances
-    resource: http://{{ hostIp }}:10080/api/{{ account.address.accountId }}
+    resource: http://{{ hostIp }}:20880/api/{{ account.address.accountId }}
     value_template: '{{ '{{' }} value_json.finances.balance {{ '}}' }}'
     scan_interval: 3600
     headers:
@@ -193,7 +193,7 @@ sensors:
 rest_command:
 {% for accessControl in place.place.accessControls %}
   domru_open_door_{{ accessControl.cameraId }}:
-    url: http://{{ hostIp }}:10080/api/open/{{ account.address.accountId }}/{{ accessControl.cameraId }}
+    url: http://{{ hostIp }}:20880/api/open/{{ account.address.accountId }}/{{ accessControl.cameraId }}
 
 {% endfor %}
 script:
