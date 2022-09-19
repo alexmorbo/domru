@@ -104,8 +104,6 @@ class Domru
                 ]
             );
             $content = $response->getBody()->getContents();
-            $cookies = $response->getHeader('Set-Cookie');
-            $cookie = explode(';', $cookies[0]);
 
             $this->logger->debug(__METHOD__.' | Headers', $response->getHeaders());
             $this->logger->debug(__METHOD__.' | Content', [$content]);
@@ -122,7 +120,6 @@ class Domru
                 $data = [
                     'phone'    => $phone,
                     'accounts' => $accounts,
-                    'cookie'   => $cookie[0],
                 ];
                 $this->cache->set('accounts', $data, 600);
             }
